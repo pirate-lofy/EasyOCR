@@ -1,6 +1,6 @@
-number: '0123456789'
+number: '٠١٢٣٤٥٦٧٨٩'
 symbol: "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ €"
-lang_char: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+lang_char: 'يوهنملكقفغعظطضصشسزرذدخحجثتبا'
 experiment_name: 'en_filtered'
 train_data: 'all_data'
 valid_data: 'all_data/en_val'
@@ -19,9 +19,9 @@ eps: 0.00000001
 grad_clip: 5
 #Data processing
 select_data: 'en_train_filtered' # this is dataset folder in train_data
-batch_ratio: '1' 
+batch_ratio: '1'
 total_data_usage_ratio: 1.0
-batch_max_length: 34 
+batch_max_length: 34    # check for possible value
 imgH: 64
 imgW: 600
 rgb: False
@@ -32,8 +32,8 @@ contrast_adjust: 0.0
 data_filtering_off: False
 # Model Architecture
 Transformation: 'None'
-FeatureExtraction: 'VGG'
-SequenceModeling: 'BiLSTM'
+FeatureExtraction: 'ResNet'
+SequenceModeling: 'LSTM'
 Prediction: 'CTC'
 num_fiducial: 20
 input_channel: 1
