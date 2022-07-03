@@ -10,10 +10,10 @@ import pandas as pd
 
 sz=(301,295)
 
-emptyId = cv.imread('emptyId.jpg')
+emptyId = cv.imread('data_generation/emptyId.jpg')
 emptyId=cv.resize(emptyId,sz)
 
-sh_data='effects/'
+sh_data='data_generation/effects/'
 sh_data=glob(sh_data+'*')
 #cv.imshow("id", emptyId[75:105, 150:278, :])
 
@@ -99,10 +99,10 @@ def play_img(img):
     return img
 
 
-names = pd.read_csv("names.txt")
+names = pd.read_csv("data_generation/names.txt")
 name_numpy = names.to_numpy()
 
-fontpath = "arialBlack.ttf"
+fontpath = "data_generation/arialBlack.ttf"
 font = ImageFont.truetype(fontpath, 24)
 b, g, r, a = 0, 0, 0, 0
 count = 0
