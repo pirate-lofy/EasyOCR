@@ -1,6 +1,6 @@
 number: '٠١٢٣٤٥٦٧٨٩'
 symbol: "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ €"
-lang_char: 'يوهنملكقفغعظطضصشسزرذدخحجثتبا'
+lang_char: 'اأإآبتثجحخدذرزسشصضطظعغفقكلمنهوىيءئؤة'
 experiment_name: 'ar_fake'
 train_data: 'all_data'
 valid_data: 'all_data/ar_val'
@@ -34,12 +34,12 @@ data_filtering_off: False
 Transformation: 'None'
 FeatureExtraction: 'ResNet'
 SequenceModeling: 'LSTM'
-Prediction: 'CTC'       
+Prediction: 'CTC'
 num_fiducial: 20
 input_channel: 1
 output_channel: 256
 hidden_size: 256
 decode: 'greedy'
 new_prediction: False
-freeze_FeatureFxtraction: True # takecare 
+freeze_FeatureFxtraction: True # takecare
 freeze_SequenceModeling: False
