@@ -1,0 +1,9 @@
+Training notes:
+  1. preprocessing -> resizing, normalization, optional padding, optional
+     contrast manuplation
+
+  2. uses CTCLoss which is prefered in time-series data, like text recognotion
+  3. CTCLoss solves the problem of characters taking multiple time-steps
+  4. it uses BidirectionalLSTM
+  5. it doesn't use transformation
+  6. vgg -> bilstm -> CTCLoss
