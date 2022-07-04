@@ -51,7 +51,7 @@ def train(opt, show_number = 2, amp=False):
     print('-' * 80)
     log.write('-' * 80 + '\n')
     log.close()
-    
+
     """ model configuration """
     if 'CTC' in opt.Prediction:
         converter = CTCLabelConverter(opt.character)
@@ -69,22 +69,22 @@ def train(opt, show_number = 2, amp=False):
     if opt.saved_model != '':
         pretrained_dict = torch.load(opt.saved_model)
         if opt.new_prediction:
-            model.Prediction = nn.Linear(model.SequenceModeling_output, len(pretrained_dict['module.Prediction.weight']))  
-        
-        model = torch.nn.DataParallel(model).to(device) 
+            model.Prediction = nn.Linear(model.SequenceModeling_output, len(pretrained_dict['module.Prediction.weight']))
+
+        model = torch.nn.DataParallel(model).to(device)
         print(f'loading pretrained model from {opt.saved_model}')
         if opt.FT:
             model.load_state_dict(pretrained_dict, strict=False)
         else:
             model.load_state_dict(pretrained_dict)
         if opt.new_prediction:
-            model.module.Prediction = nn.Linear(model.module.SequenceModeling_output, opt.num_class)  
+            model.module.Prediction = nn.Linear(model.module.SequenceModeling_output, opt.num_class)
             for name, param in model.module.Prediction.named_parameters():
                 if 'bias' in name:
                     init.constant_(param, 0.0)
                 elif 'weight' in name:
                     init.kaiming_normal_(param)
-            model = model.to(device) 
+            model = model.to(device)
     else:
         # weight initialization
         for name, param in model.named_parameters():
@@ -101,12 +101,12 @@ def train(opt, show_number = 2, amp=False):
                     param.data.fill_(1)
                 continue
         model = torch.nn.DataParallel(model).to(device)
-    
-    model.train() 
+
+    model.train()
     print("Model:")
     print(model)
     count_parameters(model)
-    
+
     """ setup loss """
     if 'CTC' in opt.Prediction:
         criterion = torch.nn.CTCLoss(zero_infinity=True).to(device)
@@ -125,7 +125,7 @@ def train(opt, show_number = 2, amp=False):
                 param.requires_grad = False
     except:
         pass
-    
+
     # filter that only require gradient decent
     filtered_parameters = []
     params_num = []
@@ -171,11 +171,11 @@ def train(opt, show_number = 2, amp=False):
 
     scaler = GradScaler()
     t1= time.time()
-        
+
     while(True):
         # train part
         optimizer.zero_grad(set_to_none=True)
-        
+
         if amp:
             with autocast():
                 image_tensors, labels = train_dataset.get_batch()
@@ -216,7 +216,7 @@ def train(opt, show_number = 2, amp=False):
                 target = text[:, 1:]  # without [GO] Symbol
                 cost = criterion(preds.view(-1, preds.shape[-1]), target.contiguous().view(-1))
             cost.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), opt.grad_clip) 
+            torch.nn.utils.clip_grad_norm_(model.parameters(), opt.grad_clip)
             optimizer.step()
         loss_avg.add(cost)
 
@@ -256,10 +256,10 @@ def train(opt, show_number = 2, amp=False):
                 dashed_line = '-' * 80
                 head = f'{"Ground Truth":25s} | {"Prediction":25s} | Confidence Score & T/F'
                 predicted_result_log = f'{dashed_line}\n{head}\n{dashed_line}\n'
-                
+
                 #show_number = min(show_number, len(labels))
-                
-                start = random.randint(0,len(labels) - show_number )    
+
+                start = random.randint(0,len(labels) - show_number )
                 for gt, pred, confidence in zip(labels[start:start+show_number], preds[start:start+show_number], confidence_score[start:start+show_number]):
                     if 'Attn' in opt.Prediction:
                         gt = gt[:gt.find('[s]')]
@@ -278,5 +278,4 @@ def train(opt, show_number = 2, amp=False):
 
         if i == opt.num_iter:
             print('end the training')
-            sys.exit()
         i += 1
