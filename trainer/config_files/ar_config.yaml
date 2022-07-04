@@ -1,6 +1,6 @@
 number: '٠١٢٣٤٥٦٧٨٩'
 symbol: "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ €"
-lang_char: 'اأإآبتثجحخدذرزسشصضطظعغفقكلمنهوىيءئؤة'
+lang_char: 'اأإآبتثجحخدذرزسشصضطظعغفقكلمنهوىيءئؤة' # need to add space
 experiment_name: 'ar_fake'
 train_data: 'all_data'
 valid_data: 'all_data/ar_val'
@@ -8,7 +8,7 @@ manualSeed: 1111
 workers: 6
 batch_size: 32 #32
 num_iter: 30000
-valInterval: 2000
+valInterval: 500
 saved_model: '' #'saved_models/en_filtered/iter_300000.pth'
 FT: False
 optim: False # default is Adadelta
