@@ -1,6 +1,6 @@
 number: '٠١٢٣٤٥٦٧٨٩'
 symbol: ""
-lang_char: 'اأإآبتثجحخدذرزسشصضطظعغفقكلمنهوىيءئؤة'
+lang_char: ' اأإآبتثجحخدذرزسشصضطظعغفقكلمنهوىيءئؤة'
 experiment_name: 'ar_fake'
 train_data: 'all_data'
 valid_data: 'all_data/ar_val'
@@ -41,5 +41,5 @@ output_channel: 256
 hidden_size: 256
 decode: 'greedy'
 new_prediction: False
-freeze_FeatureFxtraction: True # takecare
+freeze_FeatureFxtraction: False # takecare
 freeze_SequenceModeling: False
