@@ -8,8 +8,11 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.optim as optim
 import torch.utils.data
+from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import autocast, GradScaler
 import numpy as np
+import cv2 as cv
+
 
 from utils import CTCLabelConverter, AttnLabelConverter, Averager
 from dataset import hierarchical_dataset, AlignCollate, Batch_Balanced_Dataset
@@ -17,23 +20,38 @@ from model import Model
 from test import validation
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+verbos=False
+
+# 0,1,2
+# 2,1,0
+def show(img):
+    img=np.swapaxes(img,2,0)
+    img=np.swapaxes(img,0,1)
+    #img*=255
+    print(img.shape)
+    print(img.max())
+    cv.imshow('',img)
+
 def count_parameters(model):
-    print("Modules, Parameters")
+    if(verbos):print("Modules, Parameters")
     total_params = 0
     for name, parameter in model.named_parameters():
         if not parameter.requires_grad: continue
         param = parameter.numel()
         #table.add_row([name, param])
         total_params+=param
-        print(name, param)
-    print(f"Total Trainable Params: {total_params}")
+        if(verbos):print(name, param)
+    if(verbos):print(f"Total Trainable Params: {total_params}")
     return total_params
 
 def train(opt, show_number = 2, amp=False):
+    # tensorboard
+    writer=SummaryWriter()
+
     """ dataset preparation """
     if not opt.data_filtering_off:
-        print('Filtering the images containing characters which are not in opt.character')
-        print('Filtering the images whose label is longer than opt.batch_max_length')
+        if(verbos):print('Filtering the images containing characters which are not in opt.character')
+        if(verbos):print('Filtering the images whose label is longer than opt.batch_max_length')
 
     opt.select_data = opt.select_data.split('-')
     opt.batch_ratio = opt.batch_ratio.split('-')
@@ -48,7 +66,7 @@ def train(opt, show_number = 2, amp=False):
         num_workers=int(opt.workers), prefetch_factor=512,
         collate_fn=AlignCollate_valid, pin_memory=True)
     log.write(valid_dataset_log)
-    print('-' * 80)
+    if(verbos):print('-' * 80)
     log.write('-' * 80 + '\n')
     log.close()
 
@@ -62,7 +80,7 @@ def train(opt, show_number = 2, amp=False):
     if opt.rgb:
         opt.input_channel = 3
     model = Model(opt)
-    print('model input parameters', opt.imgH, opt.imgW, opt.num_fiducial, opt.input_channel, opt.output_channel,
+    if(verbos):print('model input parameters', opt.imgH, opt.imgW, opt.num_fiducial, opt.input_channel, opt.output_channel,
           opt.hidden_size, opt.num_class, opt.batch_max_length, opt.Transformation, opt.FeatureExtraction,
           opt.SequenceModeling, opt.Prediction)
 
@@ -72,7 +90,7 @@ def train(opt, show_number = 2, amp=False):
             model.Prediction = nn.Linear(model.SequenceModeling_output, len(pretrained_dict['module.Prediction.weight']))
 
         model = torch.nn.DataParallel(model).to(device)
-        print(f'loading pretrained model from {opt.saved_model}')
+        if(verbos):print(f'loading pretrained model from {opt.saved_model}')
         if opt.FT:
             model.load_state_dict(pretrained_dict, strict=False)
         else:
@@ -89,7 +107,7 @@ def train(opt, show_number = 2, amp=False):
         # weight initialization
         for name, param in model.named_parameters():
             if 'localization_fc2' in name:
-                print(f'Skip {name} as it is already initialized')
+                if(verbos):print(f'Skip {name} as it is already initialized')
                 continue
             try:
                 if 'bias' in name:
@@ -103,8 +121,8 @@ def train(opt, show_number = 2, amp=False):
         model = torch.nn.DataParallel(model).to(device)
 
     model.train()
-    print("Model:")
-    print(model)
+    if(verbos):print("Model:")
+    if(verbos):print(model)
     count_parameters(model)
 
     """ setup loss """
@@ -132,7 +150,7 @@ def train(opt, show_number = 2, amp=False):
     for p in filter(lambda p: p.requires_grad, model.parameters()):
         filtered_parameters.append(p)
         params_num.append(np.prod(p.size()))
-    print('Trainable params num : ', sum(params_num))
+    if(verbos):print('Trainable params num : ', sum(params_num))
     # [print(name, p.numel()) for name, p in filter(lambda p: p[1].requires_grad, model.named_parameters())]
 
     # setup optimizer
@@ -141,8 +159,8 @@ def train(opt, show_number = 2, amp=False):
         optimizer = optim.Adam(filtered_parameters)
     else:
         optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps)
-    print("Optimizer:")
-    print(optimizer)
+    if(verbos):print("Optimizer:")
+    if(verbos):print(optimizer)
 
     """ final options """
     # print(opt)
@@ -152,7 +170,7 @@ def train(opt, show_number = 2, amp=False):
         for k, v in args.items():
             opt_log += f'{str(k)}: {str(v)}\n'
         opt_log += '---------------------------------------\n'
-        print(opt_log)
+        if(verbos):print(opt_log)
         opt_file.write(opt_log)
 
     """ start training """
@@ -160,7 +178,7 @@ def train(opt, show_number = 2, amp=False):
     if opt.saved_model != '':
         try:
             start_iter = int(opt.saved_model.split('_')[-1].split('.')[0])
-            print(f'continue to train, start_iter: {start_iter}')
+            if(verbos):print(f'continue to train, start_iter: {start_iter}')
         except:
             pass
 
@@ -190,10 +208,18 @@ def train(opt, show_number = 2, amp=False):
                     torch.backends.cudnn.enabled = False
                     cost = criterion(preds, text.to(device), preds_size.to(device), length.to(device))
                     torch.backends.cudnn.enabled = True
+
+                    print(preds.numpy())
+                    writer.add_scalar('train/loss',cost,i)
+
                 else:
                     preds = model(image, text[:, :-1])  # align with Attention.forward
                     target = text[:, 1:]  # without [GO] Symbol
                     cost = criterion(preds.view(-1, preds.shape[-1]), target.contiguous().view(-1))
+                    print(preds.numpy())
+                    writer.add_scalar('train/loss',cost,i)
+                    writer.flush()
+
             scaler.scale(cost).backward()
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), opt.grad_clip)
@@ -202,7 +228,16 @@ def train(opt, show_number = 2, amp=False):
         else:
             image_tensors, labels = train_dataset.get_batch()
             image = image_tensors.to(device)
+
+            '''
+            show(image[10].numpy())
+            if cv.waitKey(1)==27:
+                cv.destroyAllWindows()
+                break
+            '''
+
             text, length = converter.encode(labels, batch_max_length=opt.batch_max_length)
+            #print(text[10].numpy())
             batch_size = image.size(0)
             if 'CTC' in opt.Prediction:
                 preds = model(image, text).log_softmax(2)
@@ -211,6 +246,10 @@ def train(opt, show_number = 2, amp=False):
                 torch.backends.cudnn.enabled = False
                 cost = criterion(preds, text.to(device), preds_size.to(device), length.to(device))
                 torch.backends.cudnn.enabled = True
+
+                writer.add_scalar('train/loss',cost,i)
+                writer.flush()
+
             else:
                 preds = model(image, text[:, :-1])  # align with Attention.forward
                 target = text[:, 1:]  # without [GO] Symbol
@@ -222,7 +261,7 @@ def train(opt, show_number = 2, amp=False):
 
         # validation part
         if (i % opt.valInterval == 0) and (i!=0):
-            print('training time: ', time.time()-t1)
+            if(verbos):print('training time: ', time.time()-t1)
             t1=time.time()
             elapsed_time = time.time() - start_time
             # for log
@@ -231,6 +270,12 @@ def train(opt, show_number = 2, amp=False):
                 with torch.no_grad():
                     valid_loss, current_accuracy, current_norm_ED, preds, confidence_score, labels,\
                     infer_time, length_of_data = validation(model, criterion, valid_loader, converter, opt, device)
+
+                # tb
+                writer.add_scalar('val/loss',valid_loss,i)
+                writer.add_scalar('val/acc',current_accuracy,i)
+                writer.flush()
+
                 model.train()
 
                 # training loss and validation loss
@@ -249,7 +294,7 @@ def train(opt, show_number = 2, amp=False):
                 best_model_log = f'{"Best_accuracy":17s}: {best_accuracy:0.3f}, {"Best_norm_ED":17s}: {best_norm_ED:0.4f}'
 
                 loss_model_log = f'{loss_log}\n{current_model_log}\n{best_model_log}'
-                print(loss_model_log)
+                if(verbos):print(loss_model_log)
                 log.write(loss_model_log + '\n')
 
                 # show some predicted results
@@ -267,9 +312,9 @@ def train(opt, show_number = 2, amp=False):
 
                     predicted_result_log += f'{gt:25s} | {pred:25s} | {confidence:0.4f}\t{str(pred == gt)}\n'
                 predicted_result_log += f'{dashed_line}'
-                print(predicted_result_log)
+                if(verbos):print(predicted_result_log)
                 log.write(predicted_result_log + '\n')
-                print('validation time: ', time.time()-t1)
+                if(verbos):print('validation time: ', time.time()-t1)
                 t1=time.time()
         # save model per 1e+4 iter.
         if (i + 1) % 1e+4 == 0:
