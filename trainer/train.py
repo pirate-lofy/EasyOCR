@@ -20,7 +20,7 @@ from model import Model
 from test import validation
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-verbos=False
+verbos=True
 
 # 0,1,2
 # 2,1,0
@@ -85,6 +85,7 @@ def train(opt, show_number = 2, amp=False):
           opt.SequenceModeling, opt.Prediction)
 
     if opt.saved_model != '':
+        print(opt.saved_model)
         pretrained_dict = torch.load(opt.saved_model)
         if opt.new_prediction:
             model.Prediction = nn.Linear(model.SequenceModeling_output, len(pretrained_dict['module.Prediction.weight']))
@@ -190,6 +191,7 @@ def train(opt, show_number = 2, amp=False):
     scaler = GradScaler()
     t1= time.time()
 
+    print('start training.....')
     while(True):
         # train part
         optimizer.zero_grad(set_to_none=True)
