@@ -1,5 +1,5 @@
-number: '٠١٢٣٤٥٦٧٨٩'
-symbol: "/"
+number: ''
+symbol: ""
 lang_char: ' اأإآبتثجحخدذرزسشصضطظعغفقكلمنهوىيءئؤة'
 experiment_name: 'ar_fake'
 train_data: 'all_data'
@@ -33,7 +33,7 @@ data_filtering_off: False
 # Model Architecture
 Transformation: 'None'
 FeatureExtraction: 'ResNet'
-SequenceModeling: 'LSTM'
+SequenceModeling: 'BiLSTM'
 Prediction: 'CTC'
 num_fiducial: 20
 input_channel: 1
