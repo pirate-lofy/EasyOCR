@@ -8,7 +8,7 @@ manualSeed: 1111
 workers: 6
 batch_size: 32 #32
 num_iter: 30000
-valInterval: 2000
+valInterval: 1000
 saved_model: '' #'saved_models/long_words_91.pth'
 FT: False
 optim: False # default is Adadelta
