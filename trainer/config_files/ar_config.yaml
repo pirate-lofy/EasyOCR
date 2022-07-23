@@ -2,7 +2,7 @@ number: ''
 symbol: ""
 lang_char: ' اأإآبتثجحخدذرزسشصضطظعغفقكلمنهوىيءئؤة'
 experiment_name: 'ar_fake'
-train_data: 'all_data'
+train_data: 'all_data/ar_sample'
 valid_data: 'all_data/ar_val'
 manualSeed: 1111
 workers: 6
