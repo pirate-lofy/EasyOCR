@@ -22,8 +22,8 @@ select_data: 'ar' # this is dataset folder in train_data
 batch_ratio: '1'
 total_data_usage_ratio: 1.0
 batch_max_length: 34    # check for possible value
-imgH: 32
-imgW: 600
+imgH: 50
+imgW: 270
 rgb: False
 contrast_adjust: True # need to be changed in the future training
 sensitive: True
