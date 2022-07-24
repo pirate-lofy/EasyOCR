@@ -5,7 +5,7 @@ experiment_name: 'ar_fake'
 train_data: 'all_data/ar_sample'
 valid_data: 'all_data/ar_val'
 manualSeed: 1111
-workers: 6
+workers: 4
 batch_size: 32 #32
 num_iter: 30000
 valInterval: 1000
@@ -27,7 +27,7 @@ imgW: 600
 rgb: False
 contrast_adjust: True # need to be changed in the future training
 sensitive: True
-PAD: True
+PAD: False
 contrast_adjust: 0.2 # need to be checked if enabled the adjustment
 data_filtering_off: False
 # Model Architecture
